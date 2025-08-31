@@ -1,0 +1,2081 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Denario Network - La Primera Criptomoneda Social</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --success: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --warning: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            --dark: #1a1a2e;
+            --light: #eee;
+            --glass: rgba(255,255,255,0.1);
+            --glass-border: rgba(255,255,255,0.2);
+            --text-primary: #333;
+            --text-secondary: #666;
+            --text-light: rgba(255,255,255,0.9);
+        }
+        
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--primary);
+            min-height: 100vh;
+            color: var(--text-primary);
+            overflow-x: hidden;
+        }
+        
+        /* Animaciones de fondo */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.2) 0%, transparent 50%);
+            animation: backgroundMove 20s ease-in-out infinite;
+            z-index: -1;
+        }
+        
+        @keyframes backgroundMove {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.1); }
+        }
+        
+        .app-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            position: relative;
+        }
+        
+        .header::before {
+            content: '⚡';
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 4em;
+            animation: bounce 2s infinite;
+            filter: drop-shadow(0 0 20px rgba(255,255,255,0.5));
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateX(-50%) translateY(0); }
+            40% { transform: translateX(-50%) translateY(-10px); }
+            60% { transform: translateX(-50%) translateY(-5px); }
+        }
+        
+        .header h1 {
+            font-size: 4em;
+            margin: 60px 0 20px 0;
+            background: linear-gradient(45deg, #fff, #f0f8ff, #fff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 30px rgba(255,255,255,0.5);
+            font-weight: 800;
+            letter-spacing: -2px;
+        }
+        
+        .header .subtitle {
+            font-size: 1.4em;
+            color: var(--text-light);
+            opacity: 0.9;
+            font-weight: 300;
+            margin-bottom: 10px;
+        }
+        
+        .header .tagline {
+            font-size: 1em;
+            color: var(--text-light);
+            opacity: 0.7;
+            font-style: italic;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            max-width: 350px;
+            padding: 15px 20px;
+            background: rgba(255,255,255,0.95);
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            border-left: 4px solid #4facfe;
+            transform: translateX(400px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification.success { border-left-color: #43e97b; }
+        .notification.warning { border-left-color: #f5576c; }
+        .notification.info { border-left-color: #4facfe; }
+        
+        .network-status {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            padding: 25px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        }
+        
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 20px;
+        }
+        
+        .status-item {
+            text-align: center;
+            padding: 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            border: 1px solid rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .status-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .status-item:hover::before {
+            left: 100%;
+        }
+        
+        .status-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+        
+        .status-value {
+            font-size: 2.2em;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 8px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+        
+        .status-label {
+            color: var(--text-light);
+            font-size: 0.9em;
+            font-weight: 500;
+            opacity: 0.9;
+        }
+        
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 420px;
+            gap: 30px;
+        }
+        
+        .left-panel, .right-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        .panel {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--success);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+        
+        .panel:hover::before {
+            transform: scaleX(1);
+        }
+        
+        .panel:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+        }
+        
+        .panel h3 {
+            color: white;
+            margin-bottom: 25px;
+            font-size: 1.5em;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 700;
+        }
+        
+        .user-setup {
+            background: var(--secondary);
+            border: none;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: var(--text-light);
+            font-size: 0.95em;
+        }
+        
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 12px;
+            font-size: 16px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+        
+        .form-group input::placeholder,
+        .form-group select::placeholder,
+        .form-group textarea::placeholder {
+            color: rgba(255,255,255,0.6);
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: rgba(255,255,255,0.5);
+            background: rgba(255,255,255,0.15);
+            box-shadow: 0 0 20px rgba(255,255,255,0.1);
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background: var(--success);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.6s;
+        }
+        
+        .btn:hover::before {
+            left: 100%;
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn:disabled {
+            background: rgba(255,255,255,0.2);
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-secondary {
+            background: var(--warning);
+        }
+        
+        .btn-danger {
+            background: var(--secondary);
+        }
+        
+        .user-list {
+            max-height: 450px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,255,255,0.3) transparent;
+        }
+        
+        .user-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .user-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        .user-list::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.3);
+            border-radius: 3px;
+        }
+        
+        .user-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        .user-item:hover {
+            background: rgba(255,255,255,0.15);
+            transform: translateX(5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        .user-item.current-user {
+            background: var(--success);
+            border-color: rgba(255,255,255,0.4);
+            box-shadow: 0 5px 20px rgba(79,172,254,0.3);
+        }
+        
+        .user-info {
+            flex: 1;
+        }
+        
+        .user-name {
+            font-weight: 700;
+            color: white;
+            font-size: 1.1em;
+            margin-bottom: 5px;
+        }
+        
+        .user-address {
+            font-size: 0.8em;
+            color: var(--text-light);
+            font-family: 'Courier New', monospace;
+            opacity: 0.8;
+        }
+        
+        .user-balance {
+            font-weight: 800;
+            color: white;
+            font-size: 1.3em;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            margin-bottom: 10px;
+        }
+        
+        .send-btn {
+            padding: 10px 18px;
+            font-size: 14px;
+            width: auto;
+            margin: 0;
+            border-radius: 8px;
+        }
+        
+        .transaction-item {
+            padding: 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+        
+        .transaction-item:hover {
+            background: rgba(255,255,255,0.15);
+            transform: translateX(5px);
+        }
+        
+        .transaction-item.pending {
+            border-left: 4px solid #f5576c;
+            background: rgba(245,87,108,0.1);
+        }
+        
+        .transaction-item.confirmed {
+            border-left: 4px solid #43e97b;
+        }
+        
+        .transaction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .transaction-amount {
+            font-weight: 800;
+            font-size: 1.2em;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+        
+        .transaction-amount.incoming {
+            color: #43e97b;
+        }
+        
+        .transaction-amount.outgoing {
+            color: #f5576c;
+        }
+        
+        .transaction-details {
+            font-size: 0.9em;
+            color: var(--text-light);
+            opacity: 0.9;
+        }
+        
+        .network-activity {
+            max-height: 350px;
+            overflow-y: auto;
+            background: rgba(0,0,0,0.3);
+            color: #00ff41;
+            padding: 20px;
+            border-radius: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            border: 1px solid rgba(0,255,65,0.3);
+            scrollbar-width: thin;
+            scrollbar-color: rgba(0,255,65,0.3) transparent;
+        }
+        
+        .network-activity::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .network-activity::-webkit-scrollbar-thumb {
+            background: rgba(0,255,65,0.3);
+            border-radius: 3px;
+        }
+        
+        .mining-status {
+            padding: 25px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            margin: 20px 0;
+            border: 2px solid rgba(255,255,255,0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .mining-status.active {
+            background: var(--success);
+            border-color: rgba(255,255,255,0.4);
+            box-shadow: 0 0 30px rgba(79,172,254,0.3);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 30px rgba(79,172,254,0.3); }
+            50% { box-shadow: 0 0 50px rgba(79,172,254,0.5); }
+            100% { box-shadow: 0 0 30px rgba(79,172,254,0.3); }
+        }
+        
+        .mining-progress {
+            width: 100%;
+            height: 12px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 6px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+        
+        .mining-progress-bar {
+            height: 100%;
+            background: var(--warning);
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 6px;
+        }
+        
+        .wallet-info {
+            background: rgba(255,255,255,0.1);
+            padding: 25px;
+            border-radius: 15px;
+            border: 1px solid rgba(255,255,255,0.2);
+            margin-bottom: 20px;
+        }
+        
+        .wallet-address {
+            background: rgba(0,0,0,0.2);
+            padding: 15px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            word-break: break-all;
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            font-size: 0.9em;
+        }
+        
+        .balance-display {
+            font-size: 2.5em;
+            font-weight: 800;
+            color: white;
+            text-align: center;
+            margin: 20px 0;
+            text-shadow: 0 0 20px rgba(255,255,255,0.5);
+            background: var(--success);
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(5px);
+        }
+        
+        .modal-content {
+            background: var(--primary);
+            margin: 5% auto;
+            padding: 40px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+            border: 1px solid rgba(255,255,255,0.2);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+        }
+        
+        .close {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            font-size: 28px;
+            cursor: pointer;
+            color: white;
+            transition: all 0.3s ease;
+        }
+        
+        .close:hover {
+            color: #f5576c;
+            transform: rotate(90deg);
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .stats-chart {
+            width: 100%;
+            height: 200px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            margin: 20px 0;
+            display: flex;
+            align-items: end;
+            padding: 20px;
+            gap: 5px;
+        }
+        
+        .chart-bar {
+            flex: 1;
+            background: var(--success);
+            border-radius: 3px 3px 0 0;
+            min-height: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .chart-bar:hover {
+            background: var(--warning);
+        }
+        
+        .welcome-message {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-light);
+        }
+        
+        .welcome-message h2 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            color: white;
+        }
+        
+        .welcome-message p {
+            font-size: 1.2em;
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .feature-item {
+            text-align: center;
+            padding: 25px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .feature-item:hover {
+            transform: translateY(-5px);
+            background: rgba(255,255,255,0.15);
+        }
+        
+        .feature-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+            display: block;
+        }
+        
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .right-panel {
+                order: -1;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .app-container {
+                padding: 15px;
+            }
+            
+            .header h1 {
+                font-size: 2.5em;
+            }
+            
+            .status-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .panel {
+                padding: 20px;
+            }
+            
+            .user-item {
+                flex-direction: column;
+                text-align: center;
+                gap: 15px;
+            }
+            
+            .notification {
+                max-width: calc(100vw - 40px);
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .status-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* Efectos especiales */
+        .sparkle {
+            position: relative;
+        }
+        
+        .sparkle::after {
+            content: '✨';
+            position: absolute;
+            right: -25px;
+            top: 50%;
+            transform: translateY(-50%);
+            animation: sparkle 2s infinite;
+        }
+        
+        @keyframes sparkle {
+            0%, 100% { opacity: 0; transform: translateY(-50%) scale(0.5); }
+            50% { opacity: 1; transform: translateY(-50%) scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="header">
+            <h1>DENARIO NETWORK</h1>
+            <p class="subtitle">La Primera Criptomoneda Social del Mundo</p>
+            <p class="tagline">Blockchain real • Minería colaborativa • Transacciones instantáneas</p>
+        </div>
+
+        <!-- Notificaciones -->
+        <div class="notification" id="notification">
+            <div id="notificationContent"></div>
+        </div>
+
+        <!-- Mensaje de bienvenida para no usuarios -->
+        <div class="welcome-message" id="welcomeMessage">
+            <h2>🚀 ¡Bienvenido a Denario Network!</h2>
+            <p>Únete a la revolución blockchain más amigable del mundo. Crea transacciones reales, mina bloques colaborativamente y forma parte de una comunidad cripto única.</p>
+            
+            <div class="feature-grid">
+                <div class="feature-item">
+                    <span class="feature-icon">🎁</span>
+                    <h3>50 DNR Gratis</h3>
+                    <p>Recibe Denarios automáticamente al unirte</p>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">⚡</span>
+                    <h3>Transacciones Instantáneas</h3>
+                    <p>Envía y recibe DNR al instante</p>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">⛏️</span>
+                    <h3>Minería Colaborativa</h3>
+                    <p>Mina bloques en equipo y gana recompensas</p>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">🌐</span>
+                    <h3>Red Social</h3>
+                    <p>Interactúa con otros usuarios en tiempo real</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="network-status">
+            <div class="status-grid">
+                <div class="status-item">
+                    <div class="status-value" id="totalUsers">0</div>
+                    <div class="status-label">👥 Usuarios Activos</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-value" id="networkBlocks">1</div>
+                    <div class="status-label">📦 Bloques Minados</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-value" id="pendingTx">0</div>
+                    <div class="status-label">⏳ Tx Pendientes</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-value" id="totalSupply">100</div>
+                    <div class="status-label">💰 DNR Totales</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-value" id="networkHashRate">0</div>
+                    <div class="status-label">⚡ Hash Rate</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-value pulse" id="networkStatus">🟢 Activa</div>
+                    <div class="status-label">🌐 Estado Red</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-grid">
+            <div class="left-panel">
+                <div class="panel user-setup" id="userSetupPanel">
+                    <h3>🚀 Únete a Denario Network</h3>
+                    <div class="form-group">
+                        <label>Nombre de Usuario:</label>
+                        <input type="text" id="userName" placeholder="Tu nombre único en la red" maxlength="20">
+                    </div>
+                    <button class="btn" onclick="joinNetwork()">
+                        <span id="joinBtnText">🎯 Conectar Ahora</span>
+                    </button>
+                    <div style="margin-top: 15px; font-size: 0.9em; opacity: 0.8; text-align: center;">
+                        🎁 Recibes 50 DNR gratis al unirte
+                    </div>
+                </div>
+
+                <div class="panel" id="walletPanel" style="display: none;">
+                    <h3>💼 Mi Wallet Digital</h3>
+                    <div class="balance-display sparkle" id="myBalance">0 DNR</div>
+                    <div class="wallet-info">
+                        <label style="color: white; font-weight: bold;">Mi Dirección Blockchain:</label>
+                        <div class="wallet-address" id="myAddress"></div>
+                    </div>
+                    <div style="display: flex; gap: 15px;">
+                        <button class="btn btn-secondary" onclick="showQRCode()" style="flex: 1;">
+                            📱 Compartir
+                        </button>
+                        <button class="btn btn-danger" onclick="generateNewWallet()" style="flex: 1;">
+                            🔄 Nueva Wallet
+                        </button>
+                    </div>
+                </div>
+
+                <div class="panel" id="transactionPanel" style="display: none;">
+                    <h3>💸 Enviar Denarios</h3>
+                    <div class="form-group">
+                        <label>Destinatario:</label>
+                        <select id="recipientSelect">
+                            <option value="">Seleccionar usuario...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Cantidad DNR:</label>
+                        <input type="number" id="sendAmount" placeholder="0.00" step="0.01" min="0.01" max="999999">
+                    </div>
+                    <div class="form-group">
+                        <label>Mensaje (opcional):</label>
+                        <input type="text" id="transactionMessage" placeholder="Concepto del pago..." maxlength="100">
+                    </div>
+                    <button class="btn" onclick="sendTransaction()" id="sendBtn">
+                        🚀 Enviar Transacción
+                    </button>
+                    <div style="margin-top: 15px; font-size: 0.9em; opacity: 0.8; text-align: center;">
+                        💡 Transacciones instantáneas y sin comisiones
+                    </div>
+                </div>
+
+                <div class="panel" id="miningPanel" style="display: none;">
+                    <h3>⛏️ Centro de Minería</h3>
+                    <div class="mining-status" id="miningStatus">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <div>Estado: <span id="miningStatusText">Inactivo</span></div>
+                            <div id="miningReward" style="font-weight: bold;">🏆 +10 DNR por bloque</div>
+                        </div>
+                        <div class="mining-progress">
+                            <div class="mining-progress-bar" id="miningProgress"></div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 0.9em;">
+                            <span>Mi Contribución: <span id="miningContribution">0%</span></span>
+                            <span>Mineros Activos: <span id="activeMiners">0</span></span>
+                        </div>
+                    </div>
+                    <button class="btn btn-success" onclick="toggleMining()" id="miningBtn">
+                        ⚡ Comenzar Minería
+                    </button>
+                    <div style="margin-top: 15px; font-size: 0.9em; opacity: 0.8; text-align: center;">
+                        🤝 Pool colaborativo - Las recompensas se distribuyen según contribución
+                    </div>
+                    
+                    <div class="stats-chart" id="miningChart">
+                        <div class="chart-bar" style="height: 60%;"></div>
+                        <div class="chart-bar" style="height: 80%;"></div>
+                        <div class="chart-bar" style="height: 45%;"></div>
+                        <div class="chart-bar" style="height: 90%;"></div>
+                        <div class="chart-bar" style="height: 70%;"></div>
+                        <div class="chart-bar" style="height: 55%;"></div>
+                        <div class="chart-bar" style="height: 85%;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="right-panel">
+                <div class="panel">
+                    <h3>👥 Red de Usuarios</h3>
+                    <div style="margin-bottom: 20px; text-align: center; color: rgba(255,255,255,0.8);">
+                        Total en red: <span id="totalUsersCount" style="font-weight: bold; color: white;">0</span> usuarios
+                    </div>
+                    <div class="user-list" id="userList">
+                        <div style="text-align: center; color: rgba(255,255,255,0.6); padding: 40px 20px;">
+                            <div style="font-size: 3em; margin-bottom: 20px;">🌐</div>
+                            <div>Conectándose a la red...</div>
+                            <div class="loading" style="margin: 20px auto;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h3>📊 Mi Historial</h3>
+                    <div id="transactionHistory" style="max-height: 350px; overflow-y: auto;">
+                        <div style="text-align: center; color: rgba(255,255,255,0.6); padding: 40px 20px;">
+                            <div style="font-size: 3em; margin-bottom: 20px;">📝</div>
+                            <div>No hay transacciones aún</div>
+                            <div style="font-size: 0.9em; margin-top: 10px; opacity: 0.7;">
+                                Haz tu primera transacción para ver el historial
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h3>📡 Actividad de Red</h3>
+                    <div style="margin-bottom: 15px; font-size: 0.9em; color: rgba(255,255,255,0.8);">
+                        Monitor en tiempo real de todas las operaciones
+                    </div>
+                    <div class="network-activity" id="networkActivity">
+                        [SISTEMA] Inicializando Denario Network...<br>
+                        [BLOCKCHAIN] Cargando cadena de bloques...<br>
+                        [RED] Buscando peers en la red...<br>
+                        [MINERÍA] Pool de minería disponible...<br>
+                        [ESTADO] Red operativa ✅<br>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para QR Code y compartir -->
+    <div id="qrModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h3 style="color: white; text-align: center; margin-bottom: 25px;">📱 Compartir Mi Dirección</h3>
+            
+            <div style="text-align: center; margin: 30px 0;">
+                <div id="qrCode" style="display: inline-block; padding: 30px; background: white; border-radius: 15px; border: 3px solid rgba(255,255,255,0.3);">
+                    <div style="font-size: 80px; line-height: 1;">📱</div>
+                    <div style="font-size: 14px; margin-top: 15px; color: #333; font-weight: bold;">Código QR</div>
+                    <div style="font-size: 12px; color: #666;">Simulado para demo</div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label style="color: white;">Mi Dirección Denario:</label>
+                <div class="wallet-address" id="qrAddress" style="margin-bottom: 20px;"></div>
+            </div>
+            
+            <div style="display: flex; gap: 15px;">
+                <button class="btn btn-secondary" onclick="copyAddress()" style="flex: 1;">
+                    📋 Copiar Dirección
+                </button>
+                <button class="btn btn-success" onclick="shareAddress()" style="flex: 1;">
+                    📤 Compartir
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // CryptoJS loading
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js';
+        script.onload = function() {
+            initializeDenarioNetwork();
+        };
+        document.head.appendChild(script);
+
+        // Sistema mejorado de Denario Network
+        class DenarioBlockchain {
+            constructor() {
+                this.chain = [];
+                this.difficulty = 4;
+                this.pendingTransactions = [];
+                this.miningReward = 10;
+                this.wallets = new Map();
+                
+                this.createGenesisBlock();
+            }
+            
+            createGenesisBlock() {
+                const genesisBlock = new Block(0, Date.now(), [], '0');
+                genesisBlock.hash = this.calculateHash(genesisBlock);
+                this.chain.push(genesisBlock);
+            }
+            
+            calculateHash(block) {
+                return CryptoJS.SHA256(
+                    block.index + 
+                    block.previousHash + 
+                    block.timestamp + 
+                    JSON.stringify(block.transactions) + 
+                    block.nonce
+                ).toString();
+            }
+            
+            getLatestBlock() {
+                return this.chain[this.chain.length - 1];
+            }
+            
+            addTransaction(transaction) {
+                if (!transaction.fromAddress || !transaction.toAddress) {
+                    throw new Error('La transacción debe incluir direcciones from y to');
+                }
+                
+                if (!transaction.isValid()) {
+                    throw new Error('No se puede agregar una transacción inválida');
+                }
+                
+                if (transaction.amount <= 0) {
+                    throw new Error('El monto de la transacción debe ser mayor a 0');
+                }
+                
+                const walletBalance = this.getBalance(transaction.fromAddress);
+                if (walletBalance < transaction.amount) {
+                    throw new Error('Balance insuficiente para esta transacción');
+                }
+                
+                this.pendingTransactions.push(transaction);
+            }
+            
+            async minePendingTransactions(miningRewardAddress) {
+                const rewardTransaction = new Transaction(null, miningRewardAddress, this.miningReward);
+                this.pendingTransactions.push(rewardTransaction);
+                
+                const block = new Block(
+                    this.chain.length,
+                    Date.now(),
+                    this.pendingTransactions,
+                    this.getLatestBlock().hash
+                );
+                
+                const startTime = Date.now();
+                await block.mineBlock(this.difficulty);
+                const endTime = Date.now();
+                
+                const miningTime = (endTime - startTime) / 1000;
+                const hashRate = block.nonce / miningTime;
+                
+                this.chain.push(block);
+                this.pendingTransactions = [];
+                
+                return { miningTime, hashRate, block };
+            }
+            
+            getBalance(address) {
+                let balance = 0;
+                
+                for (const block of this.chain) {
+                    for (const trans of block.transactions) {
+                        if (trans.fromAddress === address) {
+                            balance -= trans.amount;
+                        }
+                        if (trans.toAddress === address) {
+                            balance += trans.amount;
+                        }
+                    }
+                }
+                
+                return balance;
+            }
+            
+            generateWallet() {
+                const privateKey = CryptoJS.lib.WordArray.random(256/8).toString();
+                const publicKey = CryptoJS.SHA256(privateKey).toString();
+                const address = 'DNR' + publicKey.substring(0, 34);
+                
+                const wallet = {
+                    privateKey,
+                    publicKey,
+                    address
+                };
+                
+                this.wallets.set(address, wallet);
+                return wallet;
+            }
+            
+            getTotalSupply() {
+                let total = 0;
+                for (const block of this.chain) {
+                    for (const trans of block.transactions) {
+                        if (!trans.fromAddress) {
+                            total += trans.amount;
+                        }
+                    }
+                }
+                return total;
+            }
+        }
+        
+        class Block {
+            constructor(index, timestamp, transactions, previousHash = '') {
+                this.index = index;
+                this.previousHash = previousHash;
+                this.timestamp = timestamp;
+                this.transactions = transactions;
+                this.nonce = 0;
+                this.hash = this.calculateHash();
+            }
+            
+            calculateHash() {
+                return CryptoJS.SHA256(
+                    this.index + 
+                    this.previousHash + 
+                    this.timestamp + 
+                    JSON.stringify(this.transactions) + 
+                    this.nonce
+                ).toString();
+            }
+            
+            async mineBlock(difficulty) {
+                const target = Array(difficulty + 1).join('0');
+                let attempts = 0;
+                const batchSize = 1000;
+                
+                while (this.hash.substring(0, difficulty) !== target) {
+                    this.nonce++;
+                    attempts++;
+                    
+                    if (attempts % batchSize === 0) {
+                        await new Promise(resolve => setTimeout(resolve, 1));
+                        // Actualizar progreso de minería
+                        updateMiningProgress(Math.min((this.nonce / 100000) * 100, 95));
+                    }
+                    
+                    this.hash = this.calculateHash();
+                }
+            }
+        }
+        
+        class Transaction {
+            constructor(fromAddress, toAddress, amount) {
+                this.fromAddress = fromAddress;
+                this.toAddress = toAddress;
+                this.amount = amount;
+                this.timestamp = Date.now();
+                this.signature = null;
+                this.message = '';
+            }
+            
+            calculateHash() {
+                return CryptoJS.SHA256(
+                    this.fromAddress + 
+                    this.toAddress + 
+                    this.amount + 
+                    this.timestamp
+                ).toString();
+            }
+            
+            signTransaction(privateKey) {
+                if (this.fromAddress !== null) {
+                    const hashTx = this.calculateHash();
+                    this.signature = CryptoJS.HmacSHA256(hashTx, privateKey).toString();
+                }
+            }
+            
+            isValid() {
+                if (this.fromAddress === null) return true;
+                
+                if (!this.signature || this.signature.length === 0) {
+                    throw new Error('No hay firma en esta transacción');
+                }
+                
+                return true; // Simplificado para la demo
+            }
+        }
+
+        class DenarioNetwork {
+            constructor() {
+                this.users = new Map();
+                this.blockchain = new DenarioBlockchain();
+                this.currentUser = null;
+                this.miningPool = new Set();
+                this.networkActivity = [];
+                this.isNetworkActive = true;
+                this.totalHashRate = 0;
+                
+                this.initializeNetwork();
+                this.startNetworkSimulation();
+                this.startActivityUpdates();
+            }
+            
+            initializeNetwork() {
+                // Usuarios virtuales más realistas
+                const virtualUsers = [
+                    { name: "CryptoAlice", balance: 1247.50, power: 85 },
+                    { name: "BlockBob", balance: 892.25, power: 92 },
+                    { name: "MinerCarol", balance: 1556.75, power: 78 },
+                    { name: "TraderDave", balance: 674.00, power: 68 },
+                    { name: "HODLEva", balance: 2108.30, power: 95 },
+                    { name: "NodeFrank", balance: 445.80, power: 72 }
+                ];
+                
+                virtualUsers.forEach(userData => {
+                    const wallet = this.blockchain.generateWallet();
+                    const user = {
+                        id: this.generateUserId(),
+                        name: userData.name,
+                        wallet: wallet,
+                        balance: userData.balance,
+                        isVirtual: true,
+                        lastActive: Date.now(),
+                        miningPower: userData.power,
+                        joinDate: Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000 // Últimos 30 días
+                    };
+                    
+                    this.users.set(user.id, user);
+                    
+                    if (userData.balance > 0) {
+                        const initialTx = new Transaction(null, wallet.address, userData.balance);
+                        this.blockchain.pendingTransactions.push(initialTx);
+                    }
+                });
+                
+                this.logActivity(`🌐 Red Denario iniciada con ${virtualUsers.length} nodos`);
+                this.logActivity(`⚡ Blockchain sincronizado correctamente`);
+                this.logActivity(`🔗 Protocolo P2P establecido`);
+            }
+            
+            joinUser(userName) {
+                if (!userName || userName.trim() === '') {
+                    throw new Error('El nombre de usuario es requerido');
+                }
+                
+                if (userName.length > 20) {
+                    throw new Error('El nombre debe tener máximo 20 caracteres');
+                }
+                
+                for (let [id, user] of this.users) {
+                    if (user.name.toLowerCase() === userName.toLowerCase()) {
+                        throw new Error('Este nombre ya está en uso, elige otro');
+                    }
+                }
+                
+                const wallet = this.blockchain.generateWallet();
+                const userId = this.generateUserId();
+                
+                const user = {
+                    id: userId,
+                    name: userName,
+                    wallet: wallet,
+                    balance: 50,
+                    isVirtual: false,
+                    lastActive: Date.now(),
+                    miningPower: 0,
+                    transactions: [],
+                    joinDate: Date.now()
+                };
+                
+                const welcomeBonus = new Transaction(null, wallet.address, 50);
+                welcomeBonus.message = 'Bonus de bienvenida a Denario Network';
+                this.blockchain.pendingTransactions.push(welcomeBonus);
+                
+                this.users.set(userId, user);
+                this.currentUser = user;
+                
+                this.logActivity(`🎉 ${userName} se unió a la red DNR`);
+                this.logActivity(`🎁 Bonus de 50 DNR enviado a ${userName}`);
+                this.updateNetworkStats();
+                
+                // Ocultar mensaje de bienvenida
+                document.getElementById('welcomeMessage').style.display = 'none';
+                
+                return user;
+            }
+            
+            async sendTransaction(fromUserId, toAddress, amount, message = '') {
+                const fromUser = this.users.get(fromUserId);
+                if (!fromUser) {
+                    throw new Error('Usuario no encontrado');
+                }
+                
+                const userBalance = this.blockchain.getBalance(fromUser.wallet.address);
+                if (userBalance < amount) {
+                    throw new Error(`Balance insuficiente. Tienes ${userBalance.toFixed(2)} DNR`);
+                }
+                
+                const transaction = new Transaction(fromUser.wallet.address, toAddress, amount);
+                transaction.message = message;
+                transaction.signTransaction(fromUser.wallet.privateKey);
+                
+                this.blockchain.addTransaction(transaction);
+                
+                let recipientName = 'Usuario externo';
+                for (let [id, user] of this.users) {
+                    if (user.wallet.address === toAddress) {
+                        recipientName = user.name;
+                        break;
+                    }
+                }
+                
+                this.logActivity(`💸 ${fromUser.name} → ${recipientName}: ${amount} DNR`);
+                if (message) {
+                    this.logActivity(`💬 "${message}"`);
+                }
+                
+                this.updateNetworkStats();
+                
+                // Auto-minería inteligente
+                if (this.blockchain.pendingTransactions.length >= 3) {
+                    setTimeout(() => this.smartAutoMining(), 1500 + Math.random() * 2000);
+                }
+                
+                return transaction;
+            }
+            
+            async smartAutoMining() {
+                const activeMiners = this.getActiveMiners();
+                if (activeMiners.length === 0) {
+                    // Usar un minero virtual
+                    const virtualMiners = Array.from(this.users.values())
+                        .filter(u => u.isVirtual && Math.random() > 0.3);
+                    if (virtualMiners.length > 0) {
+                        const miner = virtualMiners[Math.floor(Math.random() * virtualMiners.length)];
+                        await this.mineBlock(miner.wallet.address, miner.name);
+                    }
+                } else {
+                    // Seleccionar minero basado en poder de minería
+                    const totalPower = activeMiners.reduce((sum, m) => sum + m.miningPower, 0);
+                    let random = Math.random() * totalPower;
+                    
+                    for (const miner of activeMiners) {
+                        random -= miner.miningPower;
+                        if (random <= 0) {
+                            await this.mineBlock(miner.wallet.address, miner.name);
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            async mineBlock(minerAddress, minerName) {
+                if (this.blockchain.pendingTransactions.length === 0) {
+                    return null;
+                }
+                
+                this.logActivity(`⛏️ ${minerName} comenzó minería del bloque #${this.blockchain.chain.length}`);
+                this.logActivity(`📊 Procesando ${this.blockchain.pendingTransactions.length} transacciones`);
+                
+                try {
+                    const result = await this.blockchain.minePendingTransactions(minerAddress);
+                    
+                    this.logActivity(`✅ ¡Bloque #${result.block.index} minado exitosamente!`);
+                    this.logActivity(`🏆 ${minerName} ganó ${this.blockchain.miningReward} DNR`);
+                    this.logActivity(`⚡ Hash rate: ${Math.round(result.hashRate)} H/s`);
+                    this.logActivity(`🔗 Hash: ${result.block.hash.substring(0, 20)}...`);
+                    
+                    this.updateNetworkStats();
+                    
+                    // Actualizar progreso a 100%
+                    updateMiningProgress(100);
+                    setTimeout(() => updateMiningProgress(0), 2000);
+                    
+                    return result;
+                } catch (error) {
+                    this.logActivity(`❌ Error en minería: ${error.message}`);
+                    return null;
+                }
+            }
+            
+            joinMiningPool(userId) {
+                this.miningPool.add(userId);
+                const user = this.users.get(userId);
+                user.miningPower = Math.random() * 50 + 25; // 25-75
+                this.logActivity(`⛏️ ${user.name} se unió al pool (${user.miningPower.toFixed(0)} H/s)`);
+                this.updateNetworkStats();
+            }
+            
+            leaveMiningPool(userId) {
+                this.miningPool.delete(userId);
+                const user = this.users.get(userId);
+                user.miningPower = 0;
+                this.logActivity(`🚪 ${user.name} salió del pool de minería`);
+                this.updateNetworkStats();
+            }
+            
+            getActiveMiners() {
+                return Array.from(this.miningPool)
+                    .map(id => this.users.get(id))
+                    .filter(user => user && user.miningPower > 0);
+            }
+            
+            getUserBalance(userId) {
+                const user = this.users.get(userId);
+                if (!user) return 0;
+                return this.blockchain.getBalance(user.wallet.address);
+            }
+            
+            getUserTransactions(userId) {
+                const user = this.users.get(userId);
+                if (!user) return [];
+                
+                const transactions = [];
+                
+                for (const block of this.blockchain.chain) {
+                    for (const tx of block.transactions) {
+                        if (tx.fromAddress === user.wallet.address || tx.toAddress === user.wallet.address) {
+                            transactions.push({
+                                ...tx,
+                                blockIndex: block.index,
+                                confirmed: true,
+                                type: tx.toAddress === user.wallet.address ? 'incoming' : 'outgoing'
+                            });
+                        }
+                    }
+                }
+                
+                for (const tx of this.blockchain.pendingTransactions) {
+                    if (tx.fromAddress === user.wallet.address || tx.toAddress === user.wallet.address) {
+                        transactions.push({
+                            ...tx,
+                            confirmed: false,
+                            type: tx.toAddress === user.wallet.address ? 'incoming' : 'outgoing'
+                        });
+                    }
+                }
+                
+                return transactions.sort((a, b) => b.timestamp - a.timestamp);
+            }
+            
+            generateUserId() {
+                return 'user_' + Math.random().toString(36).substr(2, 9);
+            }
+            
+            logActivity(message) {
+                const timestamp = new Date().toLocaleTimeString();
+                this.networkActivity.unshift(`[${timestamp}] ${message}`);
+                
+                if (this.networkActivity.length > 100) {
+                    this.networkActivity = this.networkActivity.slice(0, 100);
+                }
+                
+                this.updateActivityDisplay();
+            }
+            
+            updateActivityDisplay() {
+                const container = document.getElementById('networkActivity');
+                if (container) {
+                    container.innerHTML = this.networkActivity.join('<br>');
+                    container.scrollTop = 0;
+                }
+            }
+            
+            updateNetworkStats() {
+                document.getElementById('totalUsers').textContent = this.users.size;
+                document.getElementById('totalUsersCount').textContent = this.users.size;
+                document.getElementById('networkBlocks').textContent = this.blockchain.chain.length;
+                document.getElementById('pendingTx').textContent = this.blockchain.pendingTransactions.length;
+                document.getElementById('totalSupply').textContent = this.blockchain.getTotalSupply().toFixed(0);
+                
+                // Hash rate total
+                this.totalHashRate = Array.from(this.users.values())
+                    .reduce((sum, user) => sum + (user.miningPower || 0), 0);
+                document.getElementById('networkHashRate').textContent = `${this.totalHashRate.toFixed(0)} H/s`;
+                
+                // Mineros activos
+                const activeMinersCount = this.getActiveMiners().length;
+                const element = document.getElementById('activeMiners');
+                if (element) {
+                    element.textContent = activeMinersCount;
+                }
+            }
+            
+            startNetworkSimulation() {
+                const simulateActivity = () => {
+                    if (Math.random() > 0.6 && this.users.size > 2) {
+                        const virtualUsers = Array.from(this.users.values()).filter(u => u.isVirtual);
+                        if (virtualUsers.length >= 2) {
+                            const sender = virtualUsers[Math.floor(Math.random() * virtualUsers.length)];
+                            const recipient = virtualUsers[Math.floor(Math.random() * virtualUsers.length)];
+                            
+                            if (sender !== recipient) {
+                                const amount = parseFloat((Math.random() * 50 + 1).toFixed(2));
+                                const senderBalance = this.blockchain.getBalance(sender.wallet.address);
+                                
+                                if (senderBalance > amount) {
+                                    const messages = [
+                                        'Pago de servicios',
+                                        'Transferencia automática',
+                                        'Intercambio P2P',
+                                        'Pago comercial',
+                                        'Dividend distribución'
+                                    ];
+                                    
+                                    try {
+                                        this.sendTransaction(
+                                            sender.id, 
+                                            recipient.wallet.address, 
+                                            amount, 
+                                            messages[Math.floor(Math.random() * messages.length)]
+                                        );
+                                    } catch (error) {
+                                        // Ignorar errores en simulación
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Simular minería virtual ocasional
+                    if (Math.random() > 0.8) {
+                        const virtualMiners = Array.from(this.users.values())
+                            .filter(u => u.isVirtual && !this.miningPool.has(u.id));
+                        if (virtualMiners.length > 0 && this.blockchain.pendingTransactions.length > 1) {
+                            const miner = virtualMiners[Math.floor(Math.random() * virtualMiners.length)];
+                            this.miningPool.add(miner.id);
+                            miner.miningPower = Math.random() * 30 + 15;
+                            
+                            setTimeout(() => {
+                                this.miningPool.delete(miner.id);
+                                miner.miningPower = 0;
+                            }, 30000 + Math.random() * 60000);
+                        }
+                    }
+                    
+                    setTimeout(simulateActivity, (Math.random() * 25000) + 15000);
+                };
+                
+                setTimeout(simulateActivity, 8000);
+            }
+            
+            startActivityUpdates() {
+                setInterval(() => {
+                    // Actualizar estadísticas cada 3 segundos
+                    this.updateNetworkStats();
+                    
+                    if (this.currentUser) {
+                        updateNetworkDisplay();
+                        updateUserTransactions();
+                    }
+                }, 3000);
+                
+                // Logs periódicos del sistema
+                setInterval(() => {
+                    if (Math.random() > 0.7) {
+                        const systemLogs = [
+                            '🔄 Sincronización de red completada',
+                            '📡 Conectando nuevos peers...',
+                            '🔍 Verificando integridad blockchain',
+                            '⚡ Optimizando rendimiento de red',
+                            '🛡️ Validación de seguridad activa'
+                        ];
+                        this.logActivity(systemLogs[Math.floor(Math.random() * systemLogs.length)]);
+                    }
+                }, 20000);
+            }
+        }
+
+        // Variables globales
+        let denarioNetwork;
+        let isMining = false;
+        let miningInterval;
+        let notificationTimeout;
+
+        function initializeDenarioNetwork() {
+            denarioNetwork = new DenarioNetwork();
+            updateUserList();
+            updateNetworkDisplay();
+        }
+
+        // Funciones de interfaz mejoradas
+        function showNotification(message, type = 'info', duration = 4000) {
+            const notification = document.getElementById('notification');
+            const content = document.getElementById('notificationContent');
+            
+            content.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 1.2em;">
+                        ${type === 'success' ? '✅' : type === 'warning' ? '⚠️' : 'ℹ️'}
+                    </span>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            notification.className = `notification ${type} show`;
+            
+            if (notificationTimeout) clearTimeout(notificationTimeout);
+            notificationTimeout = setTimeout(() => {
+                notification.classList.remove('show');
+            }, duration);
+        }
+
+        function joinNetwork() {
+            const userName = document.getElementById('userName').value.trim();
+            const joinBtn = document.getElementById('joinBtnText');
+            
+            if (!userName) {
+                showNotification('Por favor ingresa un nombre de usuario válido', 'warning');
+                return;
+            }
+            
+            joinBtn.innerHTML = '<span class="loading"></span> Conectando...';
+            
+            setTimeout(() => {
+                try {
+                    const user = denarioNetwork.joinUser(userName);
+                    
+                    // Ocultar panel de setup y mostrar paneles principales
+                    document.getElementById('userSetupPanel').style.display = 'none';
+                    document.getElementById('walletPanel').style.display = 'block';
+                    document.getElementById('transactionPanel').style.display = 'block';
+                    document.getElementById('miningPanel').style.display = 'block';
+                    
+                    updateNetworkDisplay();
+                    updateUserList();
+                    updateRecipientSelect();
+                    
+                    showNotification(
+                        `¡Bienvenido ${userName}! Has recibido 50 DNR de regalo 🎁`, 
+                        'success', 
+                        6000
+                    );
+                    
+                } catch (error) {
+                    showNotification(error.message, 'warning');
+                    joinBtn.textContent = '🎯 Conectar Ahora';
+                }
+            }, 1500); // Simular tiempo de conexión
+        }
+
+        function updateNetworkDisplay() {
+            if (!denarioNetwork.currentUser) return;
+            
+            const balance = denarioNetwork.getUserBalance(denarioNetwork.currentUser.id);
+            document.getElementById('myBalance').textContent = `${balance.toFixed(2)} DNR`;
+            document.getElementById('myAddress').textContent = denarioNetwork.currentUser.wallet.address;
+            
+            denarioNetwork.updateNetworkStats();
+        }
+
+        function updateUserList() {
+            const container = document.getElementById('userList');
+            container.innerHTML = '';
+            
+            const users = Array.from(denarioNetwork.users.values()).sort((a, b) => {
+                if (denarioNetwork.currentUser && a.id === denarioNetwork.currentUser.id) return -1;
+                if (denarioNetwork.currentUser && b.id === denarioNetwork.currentUser.id) return 1;
+                return denarioNetwork.getUserBalance(b.id) - denarioNetwork.getUserBalance(a.id);
+            });
+            
+            users.forEach(user => {
+                const balance = denarioNetwork.getUserBalance(user.id);
+                const isCurrentUser = denarioNetwork.currentUser && user.id === denarioNetwork.currentUser.id;
+                const isMining = denarioNetwork.miningPool.has(user.id);
+                
+                const userDiv = document.createElement('div');
+                userDiv.className = `user-item ${isCurrentUser ? 'current-user' : ''}`;
+                
+                userDiv.innerHTML = `
+                    <div class="user-info">
+                        <div class="user-name">
+                            ${user.name} 
+                            ${isCurrentUser ? '(Tú)' : ''} 
+                            ${user.isVirtual ? '🤖' : '👤'}
+                            ${isMining ? ' ⛏️' : ''}
+                        </div>
+                        <div class="user-address">${user.wallet.address.substring(0, 20)}...</div>
+                        <div style="font-size: 0.8em; color: rgba(255,255,255,0.7); margin-top: 5px;">
+                            ${user.isVirtual ? 'Bot trader' : 'Usuario real'} • 
+                            Desde ${new Date(user.joinDate).toLocaleDateString()}
+                        </div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div class="user-balance">${balance.toFixed(2)} DNR</div>
+                        ${isMining ? 
+                            `<div style="font-size: 0.8em; color: #43e97b;">⚡ ${user.miningPower.toFixed(0)} H/s</div>` : 
+                            ''
+                        }
+                        ${!isCurrentUser && denarioNetwork.currentUser ? 
+                            `<button class="btn send-btn" onclick="quickSend('${user.wallet.address}', '${user.name}')">
+                                💸 Enviar
+                            </button>` 
+                            : ''}
+                    </div>
+                `;
+                
+                container.appendChild(userDiv);
+            });
+        }
+
+        function updateRecipientSelect() {
+            const select = document.getElementById('recipientSelect');
+            select.innerHTML = '<option value="">Seleccionar destinatario...</option>';
+            
+            Array.from(denarioNetwork.users.values())
+                .filter(user => denarioNetwork.currentUser && user.id !== denarioNetwork.currentUser.id)
+                .sort((a, b) => a.name.localeCompare(b.name))
+                .forEach(user => {
+                    const balance = denarioNetwork.getUserBalance(user.id);
+                    const option = document.createElement('option');
+                    option.value = user.wallet.address;
+                    option.textContent = `${user.name} (${balance.toFixed(2)} DNR) ${user.isVirtual ? '🤖' : '👤'}`;
+                    select.appendChild(option);
+                });
+        }
+
+        function quickSend(address, name) {
+            document.getElementById('recipientSelect').value = address;
+            document.getElementById('transactionMessage').value = `Pago a ${name}`;
+            
+            document.getElementById('transactionPanel').scrollIntoView({ 
+                behavior: 'smooth',
+                block: 'center'
+            });
+            
+            // Highlight del panel
+            const panel = document.getElementById('transactionPanel');
+            panel.style.transform = 'scale(1.02)';
+            panel.style.boxShadow = '0 0 30px rgba(79,172,254,0.5)';
+            
+            setTimeout(() => {
+                panel.style.transform = '';
+                panel.style.boxShadow = '';
+            }, 2000);
+        }
+
+        function sendTransaction() {
+            const recipientAddress = document.getElementById('recipientSelect').value;
+            const amount = parseFloat(document.getElementById('sendAmount').value);
+            const message = document.getElementById('transactionMessage').value;
+            const sendBtn = document.getElementById('sendBtn');
+            
+            if (!recipientAddress) {
+                showNotification('Por favor selecciona un destinatario', 'warning');
+                return;
+            }
+            
+            if (!amount || amount <= 0) {
+                showNotification('Por favor ingresa una cantidad válida mayor a 0', 'warning');
+                return;
+            }
+            
+            sendBtn.innerHTML = '<span class="loading"></span> Enviando...';
+            sendBtn.disabled = true;
+            
+            setTimeout(() => {
+                try {
+                    denarioNetwork.sendTransaction(
+                        denarioNetwork.currentUser.id, 
+                        recipientAddress, 
+                        amount, 
+                        message
+                    );
+                    
+                    // Encontrar nombre del destinatario
+                    let recipientName = 'Usuario';
+                    for (let [id, user] of denarioNetwork.users) {
+                        if (user.wallet.address === recipientAddress) {
+                            recipientName = user.name;
+                            break;
+                        }
+                    }
+                    
+                    showNotification(
+                        `✅ ${amount} DNR enviados a ${recipientName} exitosamente`,
+                        'success'
+                    );
+                    
+                    // Limpiar formulario
+                    document.getElementById('recipientSelect').value = '';
+                    document.getElementById('sendAmount').value = '';
+                    document.getElementById('transactionMessage').value = '';
+                    
+                    updateNetworkDisplay();
+                    updateUserList();
+                    updateUserTransactions();
+                    
+                } catch (error) {
+                    showNotification(`Error: ${error.message}`, 'warning');
+                } finally {
+                    sendBtn.innerHTML = '🚀 Enviar Transacción';
+                    sendBtn.disabled = false;
+                }
+            }, 1000);
+        }
+
+        function toggleMining() {
+            if (!isMining) {
+                startMining();
+            } else {
+                stopMining();
+            }
+        }
+
+        function startMining() {
+            if (isMining) return;
+            
+            isMining = true;
+            denarioNetwork.joinMiningPool(denarioNetwork.currentUser.id);
+            
+            document.getElementById('miningBtn').innerHTML = '⏹️ Detener Minería';
+            document.getElementById('miningStatusText').textContent = 'Activo - Minando en pool';
+            document.getElementById('miningStatus').classList.add('active');
+            
+            // Simular progreso de minería dinámico
+            let progress = 0;
+            miningInterval = setInterval(() => {
+                progress += Math.random() * 8 + 2;
+                if (progress > 100) progress = Math.random() * 25;
+                
+                updateMiningProgress(progress);
+                
+                const contribution = (denarioNetwork.currentUser.miningPower / denarioNetwork.totalHashRate * 100) || 0;
+                document.getElementById('miningContribution').textContent = `${contribution.toFixed(1)}%`;
+                
+                denarioNetwork.updateNetworkStats();
+            }, 1500);
+            
+            showNotification('⛏️ ¡Minería iniciada! Ahora estás contribuyendo al pool', 'success');
+        }
+
+        function stopMining() {
+            if (!isMining) return;
+            
+            isMining = false;
+            denarioNetwork.leaveMiningPool(denarioNetwork.currentUser.id);
+            
+            document.getElementById('miningBtn').innerHTML = '⚡ Comenzar Minería';
+            document.getElementById('miningStatusText').textContent = 'Inactivo';
+            document.getElementById('miningStatus').classList.remove('active');
+            updateMiningProgress(0);
+            document.getElementById('miningContribution').textContent = '0%';
+            
+            if (miningInterval) {
+                clearInterval(miningInterval);
+            }
+            
+            denarioNetwork.updateNetworkStats();
+            showNotification('Minería detenida', 'info');
+        }
+
+        function updateMiningProgress(percentage) {
+            const progressBar = document.getElementById('miningProgress');
+            if (progressBar) {
+                progressBar.style.width = `${Math.min(percentage, 100)}%`;
+            }
+        }
+
+        function updateUserTransactions() {
+            if (!denarioNetwork.currentUser) return;
+            
+            const transactions = denarioNetwork.getUserTransactions(denarioNetwork.currentUser.id);
+            const container = document.getElementById('transactionHistory');
+            
+            if (transactions.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; color: rgba(255,255,255,0.6); padding: 40px 20px;">
+                        <div style="font-size: 3em; margin-bottom: 20px;">📝</div>
+                        <div>No hay transacciones aún</div>
+                        <div style="font-size: 0.9em; margin-top: 10px; opacity: 0.7;">
+                            Haz tu primera transacción para ver el historial
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = '';
+            
+            transactions.slice(0, 15).forEach(tx => {
+                const txDiv = document.createElement('div');
+                txDiv.className = `transaction-item ${tx.confirmed ? 'confirmed' : 'pending'}`;
+                
+                const isIncoming = tx.type === 'incoming';
+                const otherAddress = isIncoming ? tx.fromAddress : tx.toAddress;
+                let otherName = 'Sistema';
+                
+                // Buscar nombre del usuario
+                for (let [id, user] of denarioNetwork.users) {
+                    if (user.wallet.address === otherAddress) {
+                        otherName = user.name;
+                        break;
+                    }
+                }
+                
+                if (!otherAddress) otherName = 'Recompensa de red';
+                
+                txDiv.innerHTML = `
+                    <div class="transaction-header">
+                        <span class="transaction-amount ${isIncoming ? 'incoming' : 'outgoing'}">
+                            ${isIncoming ? '+' : '-'}${tx.amount.toFixed(2)} DNR
+                        </span>
+                        <span style="font-size: 0.85em; padding: 4px 8px; border-radius: 12px; ${
+                            tx.confirmed ? 
+                                'background: rgba(67,233,123,0.2); color: #43e97b;' : 
+                                'background: rgba(245,87,108,0.2); color: #f5576c;'
+                        }">
+                            ${tx.confirmed ? '✅ Confirmado' : '⏳ Pendiente'}
+                        </span>
+                    </div>
+                    <div class="transaction-details">
+                        <div style="margin-bottom: 5px;">
+                            <strong>${isIncoming ? 'De:' : 'Para:'}</strong> ${otherName}
+                        </div>
+                        ${tx.message ? `<div style="margin-bottom: 5px;"><strong>💬</strong> ${tx.message}</div>` : ''}
+                        <div style="font-size: 0.8em; color: rgba(255,255,255,0.6);">
+                            📅 ${new Date(tx.timestamp).toLocaleString()}
+                            ${tx.confirmed ? ` • Bloque #${tx.blockIndex}` : ''}
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(txDiv);
+            });
+        }
+
+        function generateNewWallet() {
+            if (!confirm('¿Estás seguro? Esto generará una nueva wallet y perderás el acceso a la actual.')) {
+                return;
+            }
+            
+            const oldAddress = denarioNetwork.currentUser.wallet.address;
+            denarioNetwork.currentUser.wallet = denarioNetwork.blockchain.generateWallet();
+            
+            denarioNetwork.logActivity(`🔄 ${denarioNetwork.currentUser.name} generó nueva wallet`);
+            
+            updateNetworkDisplay();
+            showNotification('🔄 Nueva wallet generada exitosamente', 'success');
+        }
+
+        function showQRCode() {
+            if (!denarioNetwork.currentUser) return;
+            
+            document.getElementById('qrAddress').textContent = denarioNetwork.currentUser.wallet.address;
+            document.getElementById('qrModal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('qrModal').style.display = 'none';
+        }
+
+        function copyAddress() {
+            const address = denarioNetwork.currentUser.wallet.address;
+            navigator.clipboard.writeText(address).then(() => {
+                showNotification('📋 ¡Dirección copiada al portapapeles!', 'success');
+                closeModal();
+            }).catch(() => {
+                showNotification('No se pudo copiar. Selecciona y copia manualmente.', 'warning');
+            });
+        }
+
+        function shareAddress() {
+            const address = denarioNetwork.currentUser.wallet.address;
+            const name = denarioNetwork.currentUser.name;
+            
+            const shareText = `🚀 ¡Únete a Denario Network!\n\n💰 Envíame DNR a mi dirección:\n${address}\n\n👤 Usuario: ${name}\n🌐 Red: Denario Network`;
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Mi Dirección Denario',
+                    text: shareText
+                }).then(() => {
+                    showNotification('✅ Compartido exitosamente', 'success');
+                    closeModal();
+                });
+            } else {
+                navigator.clipboard.writeText(shareText).then(() => {
+                    showNotification('📋 Información de compartir copiada al portapapeles', 'success');
+                    closeModal();
+                });
+            }
+        }
+
+        // Event listeners mejorados
+        window.onclick = function(event) {
+            const modal = document.getElementById('qrModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+
+        // Atajos de teclado
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeModal();
+            }
+            
+            if (event.key === 'Enter' && event.target.id === 'userName') {
+                joinNetwork();
+            }
+            
+            if (event.key === 'Enter' && (
+                event.target.id === 'sendAmount' || 
+                event.target.id === 'transactionMessage'
+            )) {
+                sendTransaction();
+            }
+        });
+
+        // Actualización automática mejorada
+        setInterval(() => {
+            if (denarioNetwork && denarioNetwork.currentUser) {
+                updateUserList();
+                updateRecipientSelect();
+            }
+        }, 8000);
+
+        // Animación de las barras del gráfico de minería
+        setInterval(() => {
+            const chart = document.getElementById('miningChart');
+            if (chart) {
+                const bars = chart.querySelectorAll('.chart-bar');
+                bars.forEach(bar => {
+                    const newHeight = Math.random() * 80 + 20;
+                    bar.style.height = `${newHeight}%`;
+                });
+            }
+        }, 3000);
+
+        // Efectos visuales adicionales
+        function addSparkleEffect(element) {
+            element.style.position = 'relative';
+            const sparkle = document.createElement('span');
+            sparkle.textContent = '✨';
+            sparkle.style.position = 'absolute';
+            sparkle.style.right = '-30px';
+            sparkle.style.top = '50%';
+            sparkle.style.transform = 'translateY(-50%)';
+            sparkle.style.animation = 'sparkle 2s infinite';
+            element.appendChild(sparkle);
+            
+            setTimeout(() => {
+                sparkle.remove();
+            }, 2000);
+        }
+
+        // Inicialización cuando la página esté lista
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Denario Network cargando...');
+        });
+    </script>
+</body>
+</html>
